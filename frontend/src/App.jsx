@@ -8,9 +8,13 @@ const App = () => {
   const [myId, setMyId] = useState("");
   const [targetId, setTargetId] = useState("");
   const [inputId, setInputId] = useState("");
+  const [isVideoOn, setIsVideoOn] = useState(true);
+  const [isAudioOn, setIsAudioOn] = useState(true);
+  const [isCallActive, setIsCallActive] = useState(false);
   const localRef = useRef();
   const remoteRef = useRef();
   const peerConnection = useRef(null);
+  const localStream = useRef(null);
   const pendingCandidates = useRef([]);
 
   useEffect(() => {
@@ -70,7 +74,14 @@ const App = () => {
     if (peerConnection.current) return;
 
     peerConnection.current = new RTCPeerConnection({
-      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+      iceServers: [
+        { urls: "stun:stun.l.google.com:19302" },
+        {
+          urls: "turn:relay1.expressturn.com:3478",
+          username: "expressturn",
+          credential: "webrtc",
+        },
+      ],
     });
 
     peerConnection.current.onicecandidate = (e) => {
@@ -83,13 +94,13 @@ const App = () => {
       remoteRef.current.srcObject = e.streams[0];
     };
 
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: true,
-      audio: true,
+    localStream.current = await navigator.mediaDevices.getUserMedia({
+      video: isVideoOn,
+      audio: isAudioOn,
     });
-    localRef.current.srcObject = stream;
-    stream.getTracks().forEach((track) => {
-      peerConnection.current.addTrack(track, stream);
+    localRef.current.srcObject = localStream.current;
+    localStream.current.getTracks().forEach((track) => {
+      peerConnection.current.addTrack(track, localStream.current);
     });
 
     if (isCaller) {
@@ -102,32 +113,67 @@ const App = () => {
   const handleConnect = async () => {
     setTargetId(inputId.trim());
     await createPeerConnection(inputId.trim(), true);
+    setIsCallActive(true);
+  };
+
+  const handleEndCall = () => {
+    peerConnection.current.close();
+    setIsCallActive(false);
+    localStream.current.getTracks().forEach((track) => track.stop());
+    setTargetId("");
+    setInputId("");
+  };
+
+  const handleToggleVideo = () => {
+    const videoTrack = localStream.current.getVideoTracks()[0];
+    videoTrack.enabled = !videoTrack.enabled;
+    setIsVideoOn(videoTrack.enabled);
+  };
+
+  const handleToggleAudio = () => {
+    const audioTrack = localStream.current.getAudioTracks()[0];
+    audioTrack.enabled = !audioTrack.enabled;
+    setIsAudioOn(audioTrack.enabled);
   };
 
   return (
     <div className="app-container">
-      <h2>🔗 WebRTC Video Call (via Socket ID)</h2>
-      <p>
-        <strong>Your ID:</strong> {myId}
-      </p>
+      <h2>WebRTC Video Call</h2>
+      <p className="user-id">Your ID: {myId}</p>
 
-      <div style={{ marginTop: 20 }}>
-        <input
-          type="text"
-          placeholder="Enter other user's Socket ID"
-          value={inputId}
-          onChange={(e) => setInputId(e.target.value)}
-        />
-        <button onClick={handleConnect}>Call</button>
-      </div>
+      {!isCallActive ? (
+        <div className="call-input">
+          <input
+            type="text"
+            placeholder="Enter other user's Socket ID"
+            value={inputId}
+            onChange={(e) => setInputId(e.target.value)}
+          />
+          <button className="call-button" onClick={handleConnect}>
+            Start Call
+          </button>
+        </div>
+      ) : (
+        <div className="call-actions">
+          <button className="video-control" onClick={handleToggleVideo}>
+            {isVideoOn ? "Turn Video Off" : "Turn Video On"}
+          </button>
+          <button className="audio-control" onClick={handleToggleAudio}>
+            {isAudioOn ? "Mute Audio" : "Unmute Audio"}
+          </button>
+          <button className="end-call" onClick={handleEndCall}>
+            End Call
+          </button>
+        </div>
+      )}
 
       <div className="video-container">
         <div className="video-box">
-          <h4>📹 Local</h4>
+          <h4>📹 Local Video</h4>
           <video ref={localRef} autoPlay muted playsInline />
         </div>
         <div className="video-box">
-          <h4>📞 Remote</h4>
+          <h4>📞 Remote Video</h4>
           <video ref={remoteRef} autoPlay playsInline />
         </div>
       </div>
