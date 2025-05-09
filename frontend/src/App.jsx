@@ -16,7 +16,12 @@ const App = () => {
   const peerConnection = useRef(null);
   const localStream = useRef(null);
   const pendingCandidates = useRef([]);
-
+  const disconnectSocket = () => {
+    if (socket) {
+      console.log("Disconnecting from socket...");
+      socket.disconnect();
+    }
+  };
   useEffect(() => {
     socket.on("connect", () => {
       setMyId(socket.id);
@@ -57,6 +62,7 @@ const App = () => {
         pendingCandidates.current.push(candidate);
       }
     });
+    return () => disconnectSocket();
   }, []);
 
   const applyPendingCandidates = async () => {
