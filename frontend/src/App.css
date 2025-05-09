@@ -1,0 +1,71 @@
+/* App.css */
+
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f4f4f9;
+  margin: 0;
+  padding: 0;
+}
+
+.app-container {
+  max-width: 800px;
+  margin: 30px auto;
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+  margin-top: 0;
+  color: #333;
+  text-align: center;
+}
+
+label,
+p {
+  font-size: 16px;
+  color: #555;
+}
+
+input[type="text"] {
+  padding: 10px;
+  width: 300px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+button {
+  padding: 10px 20px;
+  background-color: #0066ff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+button:hover {
+  background-color: #004ecc;
+}
+
+.video-container {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 30px;
+}
+
+.video-box {
+  flex: 1;
+  text-align: center;
+}
+
+video {
+  width: 100%;
+  max-width: 360px;
+  border-radius: 12px;
+  border: 1px solid #ccc;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.15);
+}
